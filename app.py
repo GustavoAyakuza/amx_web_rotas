@@ -5,8 +5,8 @@ from processadores.script_rotas import process_excel
 from processadores.script_roteirizador import merge_routes
 
 # Configuração inicial
-st.set_page_config(page_title="Zeo Roteirizador", layout="centered")
-st.title("📦 Roteirizador Automático - Zeo Route Planner")
+st.set_page_config(page_title="AmxZeo Roteirizador", layout="centered")
+st.title("📦 Roteirizador Automático - AMX Route Planner")
 
 # Diretórios de arquivos
 TEMP_DIR = "arquivos/temporarios"
@@ -15,7 +15,7 @@ os.makedirs(TEMP_DIR, exist_ok=True)
 os.makedirs(RESULT_DIR, exist_ok=True)
 
 # Upload do Excel bruto
-st.header("1️⃣ Envie o Excel Bruto do Cliente")
+st.header("1️⃣ Envie o Excel do Cliente")
 excel_bruto = st.file_uploader("Excel Bruto (.xlsx)", type=["xlsx"], key="bruto")
 
 if excel_bruto:
