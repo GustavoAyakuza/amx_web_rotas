@@ -21,10 +21,10 @@ def process_excel(input_path, output_saida_controle, output_rts):
         linha = df.iloc[i]
         texto_linha = linha.astype(str)
 
-        for celula in texto_linha:
+        for idx, celula in enumerate(texto_linha):
             celula = limpar_texto(celula)
 
-            # Romaneio: buscar padrão 72.857 etc.
+            # Romaneio
             if "Romaneio:" in celula:
                 match = re.search(r'Romaneio:\s*([0-9]{2}\.[0-9]{3})', celula)
                 if match:
@@ -39,21 +39,30 @@ def process_excel(input_path, output_saida_controle, output_rts):
             if "Cliente:" in celula:
                 cliente = celula.split("Cliente:")[1].strip()
 
-            # Quantidade: ativa leitura da próxima célula como volume
+            # Quantidade → pega todos os valores abaixo, na mesma coluna
             if "Quantidade" in celula:
-                aguardando_volume = True
-                continue
+                volume_total = 0
+                col_index = idx
+                linha_check = i + 1
 
-            # Volume (logo após "Quantidade")
-            if aguardando_volume:
-                volume_raw = celula.replace(".", "").replace(",", ".")  # trata 3,000 ou 4,000
-                try:
-                    volume = int(float(volume_raw))
-                except:
-                    volume = 0  # fallback caso haja erro
-                aguardando_volume = False
+                while linha_check < len(df):
+                    valor_celula = df.iloc[linha_check, col_index]
+                    valor_str = limpar_texto(valor_celula).replace(".", "").replace(",", ".")
 
-                # Salvar registro quando todos os dados estiverem presentes
+                    # Se for vazio ou texto irrelevante, parar
+                    if valor_str == "" or not re.match(r"^\d+(\.\d+)?$", valor_str):
+                        break
+
+                    try:
+                        volume_total += int(float(valor_str))
+                    except:
+                        break
+
+                    linha_check += 1
+
+                volume = volume_total
+
+                # Salvar registro se completo
                 if romaneio and cliente and endereco:
                     registros.append({
                         'NºRota': '',
@@ -65,12 +74,11 @@ def process_excel(input_path, output_saida_controle, output_rts):
                         'OBS': ''
                     })
 
-                    # Reset
                     romaneio = ''
                     cliente = ''
                     endereco = ''
                     volume = ''
-                break
+                continue
 
     # Saída Controle
     df_saida = pd.DataFrame(registros, columns=['NºRota', 'Resp.', 'NºRomaneio', 'Cliente', 'Endereço', 'VOL', 'OBS'])
@@ -80,12 +88,12 @@ def process_excel(input_path, output_saida_controle, output_rts):
     rts_data = []
     for reg in registros:
         linha = [''] * 14
-        linha[0] = reg['Endereço']     # Coluna A
-        linha[13] = reg['NºRomaneio']  # Coluna N
+        linha[0] = reg['Endereço']
+        linha[13] = reg['NºRomaneio']
         rts_data.append(linha)
 
     df_rts = pd.DataFrame(rts_data)
-    df_rts.to_excel(output_rts, index=False, header=False, engine='openpyxl')  # Sem cabeçalhos
+    df_rts.to_excel(output_rts, index=False, header=False, engine='openpyxl')
 
     print("✅ Arquivos gerados com sucesso:")
     print(f"→ Saída Controle: {output_saida_controle}")

@@ -3,9 +3,50 @@ import os
 import pandas as pd
 from processadores.script_rotas import process_excel
 from processadores.script_roteirizador import merge_routes
+import base64  # NOVO
+
 
 # Configuração inicial
 st.set_page_config(page_title="Amx Roteirizador", layout="centered")
+
+# Aplica uma caixa translúcida para o conteúdo
+st.markdown("""
+    <style>
+        .main {
+            background-color: rgba(0, 0, 0, 0.6);
+            padding: 2rem;
+            border-radius: 15px;
+        }
+        .block-container {
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
+
+# 🔵 Função para definir o fundo
+def set_background(image_file):
+    with open(image_file, "rb") as image:
+        encoded = base64.b64encode(image.read()).decode()
+    st.markdown(
+        f"""
+        <style>
+        .stApp {{
+            background-image: url("data:image/png;base64,{encoded}");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+if os.path.exists("assets/mapa_fundo.png"):
+    set_background("assets/mapa_fundo.png")
+
+
 st.title("📦 Roteirizador Automático - AMX Route Planner")
 
 # Diretórios de arquivos
@@ -15,7 +56,7 @@ os.makedirs(TEMP_DIR, exist_ok=True)
 os.makedirs(RESULT_DIR, exist_ok=True)
 
 # Upload do Excel bruto
-st.header("1️⃣ Envie o Excel de Rotas do Cliente")
+st.header("1️⃣ Envie o Excel do Cliente")
 excel_bruto = st.file_uploader("Excel Bruto (.xlsx)", type=["xlsx"], key="bruto")
 
 if excel_bruto:
@@ -55,3 +96,4 @@ if excel_bruto:
         st.success("✅ Saída Controle Atualizada gerada com sucesso!")
         with open(caminho_saida_final, "rb") as f:
             st.download_button("⬇️ Baixar Saída Controle Atualizada", f, file_name="saida_controle_atualizada.xlsx")
+
